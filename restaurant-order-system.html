@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceTable - QR Restaurant Ordering</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --primary-dark: #E55528;
+            --secondary: #004E89;
+            --accent: #FFD23F;
+            --success: #06D6A0;
+            --warning: #F77F00;
+            --bg-dark: #1A1A2E;
+            --bg-light: #16213E;
+            --text-light: #FFFFFF;
+            --text-muted: #A0A0B8;
+            --card-bg: #0F3460;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+        
+    font-family: 'DM Sans', sans-serif;
+    background: var(--main-gradient, var(--bg-dark));
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 78, 137, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(255, 210, 63, 0.05) 0%, transparent 50%);
+            animation: drift 20s ease-in-out infinite;
+            z-index: -1;
+        }
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(5deg); }
+            66% { transform: translate(-20px, 20px) rotate(-5deg); }
+        }
+/* ===== THEMES ===== */
+[data-theme="sunset"]{
+  --main-gradient: linear-gradient(135deg,#FF512F,#DD2476);
+  --card-gradient: linear-gradient(135deg,#FF9966,#FF5E62);
+  --primary: #FF6B35;
+    --secondary: #004E89;
+    --accent: #FFD23F;
+    --bg-dark: #1A1A2E;
+    --bg-light: #16213E;
+    --card-bg: #0F3460;
+}
+[data-theme="ocean"]{
+  --main-gradient: linear-gradient(135deg,#2193b0,#6dd5ed);
+  --card-gradient: linear-gradient(135deg,#00c6ff,#0072ff);
+    --primary: #00c6ff;
+    --secondary: #0072ff;
+    --accent: #6dd5ed;
+    --bg-dark: #021B79;
+    --bg-light: #0575E6;
+    --card-bg: #035AA6;
+}
+[data-theme="nature"]{
+  --main-gradient: linear-gradient(135deg,#56ab2f,#a8e063);
+  --card-gradient: linear-gradient(135deg,#2C7744,#2C7744);
+   --primary: #56ab2f;
+    --secondary: #11998e;
+    --accent: #a8e063;
+    --bg-dark: #134E5E;
+    --bg-light: #71B280;
+    --card-bg: #2C7744;
+}
+[data-theme="galaxy"]{
+  --main-gradient: linear-gradient(135deg,#0F0C29,#302B63,#24243E);
+  --card-gradient: linear-gradient(135deg,#8E2DE2,#4A00E0);
+  --primary: #8E2DE2;
+  --secondary: #4A00E0;
+  --accent: #C77DFF;
+  --bg-dark: #0F0C29;
+  --bg-light: #302B63;
+  --card-bg: #24243E;
+}
+[data-theme="fire"]{
+  --main-gradient: linear-gradient(135deg,#F00000,#DC281E);
+  --card-gradient: linear-gradient(135deg,#FF4E50,#F9D423);
+  --primary: #FF4E50;
+  --secondary: #F00000;
+  --accent: #FF9A8B;
+  --bg-dark: #3A0D0D;
+  --bg-light: #6A040F;
+  --card-bg: #9D0208;
+}
+[data-theme="ice"]{
+  --main-gradient: linear-gradient(135deg,#83EAF1,#63A4FF);
+  --card-gradient: linear-gradient(135deg,#A1C4FD,#C2E9FB);
+  --primary: #83EAF1;
+  --secondary: #63A4FF;
+  --accent: #A1C4FD;
+  --bg-dark: #1E3C72;
+  --bg-light: #2A5298;
+  --card-bg: #4FACFE;
+}
+[data-theme="luxury"]{
+  --main-gradient: linear-gradient(135deg,#000000,#434343);
+  --card-gradient: linear-gradient(135deg,#D4AF37,#FFD700);
+  --primary: #D4AF37;
+  --secondary: #1A1A1A;
+  --accent: #FFD700;
+  --bg-dark: #000000;
+  --bg-light: #111111;
+  --card-bg: #1C1C1C;
+}
+        #root {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        /* Header Styles */
+        .header {
+            padding: 1.5rem 1.5rem 1rem;
+            backdrop-filter: blur(20px);
+            background: rgba(26, 26, 46, 0.8);
+            border-bottom: 2px solid rgba(255, 107, 53, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            animation: slideDown 0.6s ease-out;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+            letter-spacing: -1px;
+        }
+        .role-selector {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .role-btn {
+            padding: 0.7rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 25px;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .role-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        .role-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+        }
+        /* Voice Button */
+        .voice-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--warning) 100%);
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            z-index: 1001;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .voice-btn:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+        .voice-btn.listening {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(135deg, var(--success) 0%, var(--accent) 100%);
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(6, 214, 160, 0); }
+        }
+        /* Menu Grid */
+        .menu-container {
+            padding: 2rem 1.5rem;
+        }
+        .category-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+            animation: fadeInUp 0.8s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .menu-item {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid transparent;
+            cursor: pointer;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+        .menu-item:nth-child(1) { animation-delay: 0.1s; }
+        .menu-item:nth-child(2) { animation-delay: 0.2s; }
+        .menu-item:nth-child(3) { animation-delay: 0.3s; }
+        .menu-item:nth-child(4) { animation-delay: 0.4s; }
+        .menu-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+        }
+        .menu-item-img {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 210, 63, 0.2));
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            overflow: hidden;
+        }
+        .menu-item-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-family: 'Playfair Display', serif;
+        }
+        .menu-item-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        .menu-item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .menu-item-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .add-btn {
+            padding: 0.6rem 1.5rem;
+            background: var(--primary);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .add-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+        /* Cart Float Button */
+        .cart-float {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--secondary);
+            border-radius: 30px;
+            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            font-weight: 600;
+            border: 2px solid var(--accent);
+        }
+        .cart-float:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 70px rgba(0, 78, 137, 0.6);
+        }
+        .cart-badge {
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 0.5rem;
+            font-size: 0.85rem;
+        }
+        /* Cart Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal {
+            background: var(--bg-light);
+            border-radius: 25px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid var(--primary);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 2px solid rgba(255, 107, 53, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .close-btn:hover {
+            color: var(--primary);
+            transform: rotate(90deg);
+        }
+        .modal-body {
+            padding: 1.5rem;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        .cart-item:hover {
+            transform: translateX(5px);
+        }
+        .cart-item-info {
+            flex: 1;
+        }
+        .cart-item-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+        .cart-item-price {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qty-btn:hover {
+            transform: scale(1.1);
+            background: var(--primary-dark);
+        }
+        .qty-text {
+            font-weight: 600;
+            font-size: 1.1rem;
+            min-width: 30px;
+            text-align: center;
+        }
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 2px solid rgba(255, 107, 53, 0.3);
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+        }
+        .confirm-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--success) 0%, var(--primary) 100%);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+        .confirm-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+        /* Order Status */
+        .order-status-container {
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .order-card {
+            background: var(--card-bg);
+            border-radius: 25px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            animation: fadeInUp 0.6s ease-out;
+        }
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .order-id {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .status-badge {
+            padding: 0.5rem 1.2rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .status-preparing {
+            background: rgba(247, 127, 0, 0.2);
+            color: var(--warning);
+            border: 2px solid var(--warning);
+        }
+        .status-ready {
+            background: rgba(6, 214, 160, 0.2);
+            color: var(--success);
+            border: 2px solid var(--success);
+        }
+        .status-served {
+            background: rgba(0, 78, 137, 0.2);
+            color: var(--secondary);
+            border: 2px solid var(--secondary);
+        }
+        .status-timeline {
+            margin-top: 2rem;
+        }
+        .timeline-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .timeline-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            border: 3px solid var(--text-muted);
+            transition: all 0.4s ease;
+        }
+        .timeline-step.active .timeline-icon {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+        }
+        .timeline-step.completed .timeline-icon {
+            background: var(--success);
+            border-color: var(--success);
+        }
+        .timeline-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .timeline-step.active .timeline-label,
+        .timeline-step.completed .timeline-label {
+            color: var(--text-light);
+        }
+        /* Kitchen/Waiter Panel */
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem 1.5rem;
+        }
+        .order-panel-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--primary);
+            animation: fadeInUp 0.6s ease-out;
+        }
+        .action-btn {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+        .btn-cooking {
+            background: var(--warning);
+            color: white;
+        }
+        .btn-ready {
+            background: var(--success);
+            color: white;
+        }
+        .btn-served {
+            background: var(--secondary);
+            color: white;
+        }
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+        /* Voice Feedback */
+        .voice-feedback {
+            position: fixed;
+            bottom: 110px;
+            right: 2rem;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 1rem 1.5rem;
+            border-radius: 20px;
+            max-width: 300px;
+            z-index: 1002;
+            animation: slideInRight 0.4s ease;
+            border: 2px solid var(--success);
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .voice-text {
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .voice-wave {
+            height: 30px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .wave-bar {
+            width: 4px;
+            background: var(--success);
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+        .wave-bar:nth-child(1) { animation-delay: 0s; }
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+        @keyframes wave {
+            0%, 100% { height: 10px; }
+            50% { height: 30px; }
+        }
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+        .empty-text {
+            font-size: 1.3rem;
+            font-family: 'Playfair Display', serif;
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+            
+            .header {
+                justify-content: center;
+            }
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            .panel-grid {
+                grid-template-columns: 1fr;
+            }
+            .voice-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+                bottom: 1.5rem;
+                right: 1.5rem;
+            }
+            .cart-float {
+                bottom: 1.5rem;
+                left: 1.5rem;
+                padding: 0.8rem 1.2rem;
+            }
+        }
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        // Sample Menu Data
+        const menuData = {
+            starters: [
+                { id: 1, name: 'Crispy Spring Rolls', desc: 'Golden fried rolls with sweet chili sauce', price: 199, emoji: '🥟' },
+                { id: 2, name: 'Buffalo Wings', desc: 'Spicy chicken wings with ranch dip', price: 299, emoji: '🍗' },
+                { id: 3, name: 'Nachos Supreme', desc: 'Loaded with cheese, jalapeños & salsa', price: 249, emoji: '🧀' },
+                { id: 4, name: 'Garlic Bread', desc: 'Toasted bread with herbs and butter', price: 149, emoji: '🍞' }
+            ],
+            mains: [
+                { id: 5, name: 'Margherita Pizza', desc: 'Classic pizza with fresh mozzarella', price: 399, emoji: '🍕' },
+                { id: 6, name: 'Grilled Chicken Steak', desc: 'Juicy steak with seasonal vegetables', price: 549, emoji: '🥩' },
+                { id: 7, name: 'Pasta Alfredo', desc: 'Creamy fettuccine with parmesan', price: 349, emoji: '🍝' },
+                { id: 8, name: 'Veg Burger', desc: 'Grilled patty with special sauce', price: 279, emoji: '🍔' }
+            ],
+            desserts: [
+                { id: 9, name: 'Chocolate Lava Cake', desc: 'Warm cake with molten chocolate', price: 199, emoji: '🍰' },
+                { id: 10, name: 'Tiramisu', desc: 'Classic Italian coffee dessert', price: 249, emoji: '🎂' },
+                { id: 11, name: 'Ice Cream Sundae', desc: 'Triple scoop with toppings', price: 179, emoji: '🍨' }
+            ],
+            beverages: [
+                { id: 12, name: 'Fresh Lime Soda', desc: 'Refreshing lime with soda', price: 99, emoji: '🍋' },
+                { id: 13, name: 'Mango Shake', desc: 'Thick mango milkshake', price: 149, emoji: '🥭' },
+                { id: 14, name: 'Cappuccino', desc: 'Rich espresso with foam', price: 129, emoji: '☕' }
+            ]
+        };
+        function App() {
+            const [role, setRole] = useState('customer');
+            const [cart, setCart] = useState([]);
+            const [orders, setOrders] = useState([]);
+            const [showCart, setShowCart] = useState(false);
+            const [tableNumber] = useState(Math.floor(Math.random() * 20) + 1);
+            const [isListening, setIsListening] = useState(false);
+            const [voiceText, setVoiceText] = useState('');
+            const recognitionRef = useRef(null);
+            const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
+            useEffect(()=>{
+                document.documentElement.setAttribute("data-theme",theme);
+                localStorage.setItem("theme",theme);
+            },[theme]);
+            useEffect(() => {
+                // Initialize Speech Recognition
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    recognitionRef.current = new SpeechRecognition();
+                    recognitionRef.current.continuous = false;
+                    recognitionRef.current.interimResults = true;
+                    recognitionRef.current.lang = 'en-US';
+                    recognitionRef.current.onresult = (event) => {
+                        const transcript = Array.from(event.results)
+                            .map(result => result[0].transcript)
+                            .join('');
+                        setVoiceText(transcript);
+                        
+                        if (event.results[0].isFinal) {
+                            processVoiceCommand(transcript.toLowerCase());
+                        }
+                    };
+                    recognitionRef.current.onerror = (event) => {
+                        console.error('Speech recognition error:', event.error);
+                        setIsListening(false);
+                        setVoiceText('Sorry, could not understand. Try again!');
+                    };
+                    recognitionRef.current.onend = () => {
+                        setIsListening(false);
+                    };
+                }
+            }, []);
+            const processVoiceCommand = (text) => {
+                const allItems = [...menuData.starters, ...menuData.mains, ...menuData.desserts, ...menuData.beverages];
+                
+                // Find items mentioned in voice command
+                const foundItems = allItems.filter(item => 
+                    text.includes(item.name.toLowerCase())
+                );
+                if (foundItems.length > 0) {
+                    foundItems.forEach(item => addToCart(item));
+                    speak(`Added ${foundItems.map(i => i.name).join(', ')} to your cart`);
+                    setTimeout(() => setVoiceText(''), 2000);
+                } else {
+                    setVoiceText('No matching items found. Try saying the item name clearly.');
+                    setTimeout(() => setVoiceText(''), 3000);
+                }
+            };
+            const speak = (text) => {
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 1;
+                    utterance.pitch = 1;
+                    window.speechSynthesis.speak(utterance);
+                }
+            };
+            const toggleVoice = () => {
+                if (isListening) {
+                    recognitionRef.current?.stop();
+                    setIsListening(false);
+                } else {
+                    setVoiceText('Listening... Say item name');
+                    recognitionRef.current?.start();
+                    setIsListening(true);
+                }
+            };
+            const addToCart = (item) => {
+                const existing = cart.find(i => i.id === item.id);
+                if (existing) {
+                    setCart(cart.map(i => i.id === item.id ? {...i, quantity: i.quantity + 1} : i));
+                } else {
+                    setCart([...cart, {...item, quantity: 1}]);
+                }
+            };
+            const updateQuantity = (id, delta) => {
+                setCart(cart.map(item => {
+                    if (item.id === id) {
+                        const newQty = item.quantity + delta;
+                        return newQty > 0 ? {...item, quantity: newQty} : null;
+                    }
+                    return item;
+                }).filter(Boolean));
+            };
+            const placeOrder = () => {
+                const newOrder = {
+                    id: `ORD${Date.now().toString().slice(-6)}`,
+                    table: tableNumber,
+                    items: [...cart],
+                    total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                    status: 'preparing',
+                    timestamp: new Date().toLocaleTimeString()
+                };
+                setOrders([...orders, newOrder]);
+                setCart([]);
+                setShowCart(false);
+                speak('Order placed successfully');
+            };
+            const updateOrderStatus = (orderId, newStatus) => {
+                setOrders(orders.map(order => 
+                    order.id === orderId ? {...order, status: newStatus} : order
+                ));
+                speak(`Order ${orderId} is now ${newStatus}`);
+            };
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            return (
+                <>
+                    <div className="header">
+                        <div>
+                            <span className="logo">🍽️ VoiceTable</span>
+                        </div>
+                        <div className="role-selector">
+                            <button className={`role-btn ${role === 'customer' ? 'active' : ''}`} onClick={() => setRole('customer')}>
+                                Customer
+                            </button>
+                            <button className={`role-btn ${role === 'waiter' ? 'active' : ''}`} onClick={() => setRole('waiter')}>
+                                Waiter
+                            </button>
+                            <button className={`role-btn ${role === 'chef' ? 'active' : ''}`} onClick={() => setRole('chef')}>
+                                Chef
+                            </button>
+                        </div>
+                    </div>
+                    {role === 'customer' && (
+                        <>
+                            <div className="menu-container">
+                                {Object.entries(menuData).map(([category, items]) => (
+                                    <div key={category}>
+                                        <h2 className="category-title">
+                                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                                        </h2>
+                                        <div className="menu-grid">
+                                            {items.map(item => (
+                                                <div key={item.id} className="menu-item">
+                                                    <div className="menu-item-img">{item.emoji}</div>
+                                                    <div className="menu-item-name">{item.name}</div>
+                                                    <div className="menu-item-desc">{item.desc}</div>
+                                                    <div className="menu-item-footer">
+                                                        <div className="menu-item-price">₹{item.price}</div>
+                                                        <button className="add-btn" onClick={() => addToCart(item)}>
+                                                            Add +
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {totalItems > 0 && (
+                                <div className="cart-float" onClick={() => setShowCart(true)}>
+                                    🛒 View Cart
+                                    <span className="cart-badge">{totalItems}</span>
+                                </div>
+                            )}
+                            <button 
+                                className={`voice-btn ${isListening ? 'listening' : ''}`}
+                                onClick={toggleVoice}
+                            >
+                                {isListening ? '🎤' : '🎙️'}
+                            </button>
+                            {voiceText && (
+                                <div className="voice-feedback">
+                                    <div className="voice-text">{voiceText}</div>
+                                    {isListening && (
+                                        <div className="voice-wave">
+                                            <div className="wave-bar"></div>
+                                            <div className="wave-bar"></div>
+                                            <div className="wave-bar"></div>
+                                            <div className="wave-bar"></div>
+                                            <div className="wave-bar"></div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {showCart && (
+                                <div className="modal-overlay" onClick={() => setShowCart(false)}>
+                                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                                        <div className="modal-header">
+                                            <div className="modal-title">Your Cart</div>
+                                            <button className="close-btn" onClick={() => setShowCart(false)}>×</button>
+                                        </div>
+                                        <div className="modal-body">
+                                            {cart.length === 0 ? (
+                                                <div className="empty-state">
+                                                    <div className="empty-icon">🛒</div>
+                                                    <div className="empty-text">Your cart is empty</div>
+                                                </div>
+                                            ) : (
+                                                cart.map(item => (
+                                                    <div key={item.id} className="cart-item">
+                                                        <div className="cart-item-info">
+                                                            <div className="cart-item-name">{item.emoji} {item.name}</div>
+                                                            <div className="cart-item-price">₹{item.price} × {item.quantity}</div>
+                                                        </div>
+                                                        <div className="quantity-control">
+                                                            <button className="qty-btn" onClick={() => updateQuantity(item.id, -1)}>−</button>
+                                                            <span className="qty-text">{item.quantity}</span>
+                                                            <button className="qty-btn" onClick={() => updateQuantity(item.id, 1)}>+</button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                        {cart.length > 0 && (
+                                            <div className="modal-footer">
+                                                <div className="total-row">
+                                                    <span>Total</span>
+                                                    <span>₹{totalPrice}</span>
+                                                </div>
+                                                <button className="confirm-btn" onClick={placeOrder}>
+                                                    🎉 Place Order
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            {orders.filter(o => o.table === tableNumber).length > 0 && (
+                                <div className="order-status-container">
+                                    <h2 className="category-title">📋 Your Orders</h2>
+                                    {orders.filter(o => o.table === tableNumber).map(order => (
+                                        <div key={order.id} className="order-card">
+                                            <div className="status-header">
+                                                <div className="order-id">#{order.id}</div>
+                                                <div className={`status-badge status-${order.status}`}>
+                                                    {order.status === 'preparing' && '🔥 Preparing'}
+                                                    {order.status === 'ready' && '✅ Ready'}
+                                                    {order.status === 'served' && '🎊 Served'}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                {order.items.map(item => (
+                                                    <div key={item.id} style={{marginBottom: '0.5rem'}}>
+                                                        {item.emoji} {item.name} × {item.quantity}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div style={{marginTop: '1rem', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)'}}>
+                                                Total: ₹{order.total}
+                                            </div>
+                                            <div className="status-timeline">
+                                                <div className={`timeline-step ${order.status === 'preparing' || order.status === 'ready' || order.status === 'served' ? 'completed' : ''}`}>
+                                                    <div className="timeline-icon">📝</div>
+                                                    <div className="timeline-label">Order Placed</div>
+                                                </div>
+                                                <div className={`timeline-step ${order.status === 'ready' || order.status === 'served' ? 'completed' : order.status === 'preparing' ? 'active' : ''}`}>
+                                                    <div className="timeline-icon">👨🍳</div>
+                                                    <div className="timeline-label">Cooking</div>
+                                                </div>
+                                                <div className={`timeline-step ${order.status === 'served' ? 'completed' : order.status === 'ready' ? 'active' : ''}`}>
+                                                    <div className="timeline-icon">🔔</div>
+                                                    <div className="timeline-label">Ready to Serve</div>
+                                                </div>
+                                                <div className={`timeline-step ${order.status === 'served' ? 'active' : ''}`}>
+                                                    <div className="timeline-icon">🎉</div>
+                                                    <div className="timeline-label">Served</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
+                    {role === 'chef' && (
+                        <div>
+                            <div className="menu-container">
+                                <h2 className="category-title">👨🍳 Kitchen Orders</h2>
+                            </div>
+                            <div className="panel-grid">
+                                {orders.filter(o => o.status !== 'served').length === 0 ? (
+                                    <div className="empty-state">
+                                        <div className="empty-icon">👨🍳</div>
+                                        <div className="empty-text">No pending orders</div>
+                                    </div>
+                                ) : (
+                                    orders.filter(o => o.status !== 'served').map(order => (
+                                        <div key={order.id} className="order-panel-card">
+                                            <div className="status-header">
+                                                <div className="order-id">#{order.id}</div>
+                                                <div style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>
+                                                    Table {order.table} • {order.timestamp}
+                                                </div>
+                                            </div>
+                                            <div style={{marginTop: '1rem'}}>
+                                                {order.items.map(item => (
+                                                    <div key={item.id} style={{padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
+                                                        {item.emoji} {item.name} × {item.quantity}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {order.status === 'preparing' && (
+                                                <button className="action-btn btn-ready" onClick={() => updateOrderStatus(order.id, 'ready')}>
+                                                    ✅ Mark as Ready
+                                                </button>
+                                            )}
+                                            {order.status === 'ready' && (
+                                                <div className="status-badge status-ready" style={{marginTop: '1rem', display: 'inline-block'}}>
+                                                    ✅ Ready for Service
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    {role === 'waiter' && (
+                        <div>
+                            <div className="menu-container">
+                                <h2 className="category-title">🧑💼 Waiter Panel</h2>
+                            </div>
+                            <div className="panel-grid">
+                                {orders.filter(o => o.status !== 'served').length === 0 ? (
+                                    <div className="empty-state">
+                                        <div className="empty-icon">🧑💼</div>
+                                        <div className="empty-text">No active orders</div>
+                                    </div>
+                                ) : (
+                                    orders.filter(o => o.status !== 'served').map(order => (
+                                        <div key={order.id} className="order-panel-card">
+                                            <div className="status-header">
+                                                <div className="order-id">#{order.id}</div>
+                                                <div className={`status-badge status-${order.status}`}>
+                                                    {order.status === 'preparing' && '🔥 Cooking'}
+                                                    {order.status === 'ready' && '✅ Ready'}
+                                                </div>
+                                            </div>
+                                            <div style={{fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem'}}>
+                                                Table {order.table} • {order.timestamp}
+                                            </div>
+                                            <div>
+                                                {order.items.map(item => (
+                                                    <div key={item.id} style={{padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
+                                                        {item.emoji} {item.name} × {item.quantity}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div style={{marginTop: '1rem', fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--accent)'}}>
+                                                Total: ₹{order.total}
+                                            </div>
+                                            {order.status === 'ready' && (
+                                                <button className="action-btn btn-served" onClick={() => updateOrderStatus(order.id, 'served')}>
+                                                    🎊 Mark as Served
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </>
+            );
+        }
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
